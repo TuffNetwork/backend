@@ -1,6 +1,10 @@
 {
   "dependencies": {
-    "hono": "^3.12.0",
-    "ws": "^8.18.3"
+    "@mercuryworkshop/wisp-js": "^0.4.1",
+    "discord.js": "^14.25.1",
+    "hono": "^4.11.3"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
   }
 }

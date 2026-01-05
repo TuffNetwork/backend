@@ -1,6 +1,15 @@
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 
-let servers = new Map();
+interface ServerEntry {
+    addr: string;
+    ws: WebSocket | null;
+}
+
+interface ServerData {
+    addr: string;
+}
+
+let servers = new Map<string, ServerEntry>();
 
 const save = () => {
     let list = Array.from(servers.values()).map(s => ({ addr: s.addr }));
@@ -9,12 +18,12 @@ const save = () => {
 
 if (existsSync('./servers.json')) {
     try {
-        let list = JSON.parse(readFileSync('./servers.json', 'utf8'));
+        let list = JSON.parse(readFileSync('./servers.json', 'utf8')) as { addr: string }[];
         for (let s of list) servers.set(s.addr, { addr: s.addr, ws: null });
     } catch (e) { }
 }
 
-async function check(url) {
+async function check(url: string): Promise<boolean> {
     try {
         return await new Promise(r => {
             let s = new WebSocket(url);
@@ -25,7 +34,7 @@ async function check(url) {
             s.onmessage = (msg) => {
                 if (!d) {
                     try {
-                        let json = JSON.parse(msg.data);
+                        let json = JSON.parse(msg.data as string);
                         if (json.motd || json.name || json.max || json.online) {
                             d = true; s.close(); clearTimeout(to); r(true);
                         }
@@ -58,9 +67,9 @@ const server = Bun.serve({
         open(ws) { },
         async message(ws, msg) {
             try {
-                let data = JSON.parse(msg);
+                let data = JSON.parse(msg.toString());
                 if (data.type === 'register' && data.server) {
-                    let addr = data.server.endsWith('/') ? data.server.slice(0, -1) : data.server;
+                    let addr: string = data.server.endsWith('/') ? data.server.slice(0, -1) : data.server;
 
                     let existing = servers.get(addr);
                     if (existing && existing.ws && existing.ws !== ws) {
@@ -76,7 +85,7 @@ const server = Bun.serve({
                         return;
                     }
 
-                    servers.set(addr, { addr, ws });
+                    servers.set(addr, { addr, ws: ws as unknown as WebSocket });
                     ws.data = { addr };
                     ws.send(JSON.stringify({ type: 'ok' }));
                     save();
@@ -84,8 +93,9 @@ const server = Bun.serve({
             } catch (e) { }
         },
         close(ws) {
-            if (ws.data && ws.data.addr) {
-                servers.delete(ws.data.addr);
+            let data = ws.data as ServerData | undefined;
+            if (data && data.addr) {
+                servers.delete(data.addr);
                 save();
             }
         },
