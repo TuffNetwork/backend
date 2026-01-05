@@ -3,13 +3,13 @@ import { checkServer } from './handlers';
 
 load();
 
-const server = Bun.serve({
+const server = Bun.serve<ServerData>({
     port: 6700,
     fetch(req, server) {
         let url = new URL(req.url);
 
         if (url.pathname === '/ws') {
-            if (server.upgrade(req)) return;
+            if (server.upgrade(req, { data: { addr: '' } })) return;
             return new Response('upgrade failed', { status: 500 });
         }
 
@@ -42,7 +42,7 @@ const server = Bun.serve({
                         return;
                     }
 
-                    servers.set(addr, { addr, ws: ws as unknown as WebSocket });
+                    servers.set(addr, { addr, ws });
                     ws.data = { addr };
                     ws.send(JSON.stringify({ type: 'ok' }));
                     save();
@@ -50,9 +50,8 @@ const server = Bun.serve({
             } catch (e) { }
         },
         close(ws) {
-            let data = ws.data as ServerData | undefined;
-            if (data && data.addr) {
-                servers.delete(data.addr);
+            if (ws.data?.addr) {
+                servers.delete(ws.data.addr);
                 save();
             }
         },
