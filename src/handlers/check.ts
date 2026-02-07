@@ -1,4 +1,9 @@
+const MAX_CONCURRENT_CHECKS = 10;
+let activeChecks = 0;
+
 export async function checkServer(url: string): Promise<boolean> {
+    if (activeChecks >= MAX_CONCURRENT_CHECKS) return false;
+    activeChecks++;
     try {
         return await new Promise(r => {
             let s = new WebSocket(url);
@@ -10,7 +15,7 @@ export async function checkServer(url: string): Promise<boolean> {
                 if (!d) {
                     try {
                         let json = JSON.parse(msg.data as string);
-                        if (json.motd || json.name || json.max || json.online) {
+                        if ('motd' in json || 'name' in json || 'max' in json || 'online' in json) {
                             d = true; s.close(); clearTimeout(to); r(true);
                         }
                     } catch (e) { }
@@ -18,5 +23,5 @@ export async function checkServer(url: string): Promise<boolean> {
             };
             s.onerror = s.onclose = () => { if (!d) { d = true; clearTimeout(to); r(false); } };
         });
-    } catch { return false; }
+    } catch { return false; } finally { activeChecks--; }
 }
