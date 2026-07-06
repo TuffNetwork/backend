@@ -22,6 +22,14 @@ function err(ws: any, msg: string) {
     ws.close();
 }
 
+function getCorsHeaders(req: Request) {
+    return {
+        'Access-Control-Allow-Origin': req.headers.get('origin') ?? '*', // dynamically add the origin of the request
+        'Access-Control-Allow-Methods': 'GET, OPTIONS',
+        'Access-Control-Allow-Headers': '*',
+    };
+}
+
 const server = Bun.serve<ServerData>({
     port: 6700,
     fetch(req, server) {
@@ -32,9 +40,13 @@ const server = Bun.serve<ServerData>({
             return new Response('upgrade failed', { status: 500 });
         }
 
+        if (req.method === 'OPTIONS' && url.pathname === '/api/servers') {
+            return new Response(null, { status: 204, headers: getCorsHeaders(req) });
+        }
+
         if (url.pathname === '/api/servers') {
             let list = Array.from(servers.values()).filter(s => s.ws !== null).map(s => ({ server: s.addr }));
-            return Response.json(list);
+            return Response.json(list, { headers: getCorsHeaders(req) });
         }
 
         return new Response('not found', { status: 404 });
