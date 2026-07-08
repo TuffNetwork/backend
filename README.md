@@ -1,10 +1,9 @@
-## TuffClient Backend
+## tuffc backend
+list of eaglercraft servers using tuffx. tuffx connects to websocket and stays connected, and when the connection drops, the server is removed.
 
-This NodeJS server maintains the list of eaglercraft servers using TuffX+ with the registry enabled. TuffX+ connects to the WebSocket and stays connected, and when the connection drops, the server is removed.
-
-### Endpoints
+### endpoints
 - /ws - WebSocket - plugin connects here
 - /api/servers - GET - lists all active servers
 
-### Prerequisites
+### prerequisites
 - bun
