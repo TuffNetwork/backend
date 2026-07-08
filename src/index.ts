@@ -1,7 +1,7 @@
 import { servers, save, load, MAX_SERVERS, validateServerURL, type ServerData } from './lib';
 import { checkServer } from './handlers';
 
-load();
+await load();
 
 const MSG_LIMIT = 5;
 const MSG_WINDOW = 10_000;
@@ -53,7 +53,6 @@ const server = Bun.serve<ServerData>({
     },
     websocket: {
         maxPayloadLength: 4096,
-        open(ws) { },
         async message(ws, msg) {
             if (ratelimited(ws)) return err(ws, 'rate limited');
 
