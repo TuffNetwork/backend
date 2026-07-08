@@ -5,5 +5,8 @@ list of eaglercraft servers using tuffx+. tuffx+ connects to the websocket and s
 - /ws - WebSocket - plugin connects here
 - /api/servers - GET - lists all active servers
 
+### config
+edit `config.ts` to change the port
+
 ### prerequisites
 - bun

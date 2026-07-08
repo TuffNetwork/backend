@@ -1,5 +1,6 @@
 import { servers, save, load, MAX_SERVERS, validateServerURL, type ServerData } from './lib';
 import { checkServer } from './handlers';
+import { config } from '../config';
 
 await load();
 
@@ -31,7 +32,7 @@ function getCorsHeaders(req: Request) {
 }
 
 const server = Bun.serve<ServerData>({
-    port: 6700,
+    port: config.port,
     fetch(req, server) {
         let url = new URL(req.url);
 
