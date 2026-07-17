@@ -73,6 +73,16 @@ const server = Bun.serve<ServerData>({
                     let valid = await checkServer(addr);
                     if (!valid) return err(ws, 'not an eagler server');
 
+                    if (ws.readyState !== 1) return;
+
+                    existing = servers.get(addr);
+                    if (existing && existing.ws && existing.ws !== ws)
+                        return err(ws, 'already registered');
+
+                    let prev = ws.data.addr;
+                    if (prev && prev !== addr && servers.get(prev)?.ws === ws)
+                        servers.delete(prev);
+
                     servers.set(addr, { addr, ws });
                     ws.data = { addr };
                     ws.send(JSON.stringify({ type: 'ok' }));
@@ -81,8 +91,9 @@ const server = Bun.serve<ServerData>({
             } catch { }
         },
         close(ws) {
-            if (ws.data?.addr) {
-                servers.delete(ws.data.addr);
+            let addr = ws.data?.addr;
+            if (addr && servers.get(addr)?.ws === ws) {
+                servers.delete(addr);
                 save();
             }
         },

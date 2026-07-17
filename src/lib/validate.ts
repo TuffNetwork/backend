@@ -28,6 +28,5 @@ export async function validateServerURL(raw: string): Promise<string | null> {
         if (addrs.some(isPrivate)) return null;
     } catch { }
 
-    let clean = url.toString();
-    return clean.endsWith('/') ? clean.slice(0, -1) : clean;
+    return `${url.protocol}//${url.host}`;
 }
